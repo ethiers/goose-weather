@@ -6,10 +6,10 @@ import {
   MetaReducer
 } from '@ngrx/store';
 import {environment} from '../../environments/environment';
-import {WeatherData} from "../models/weather-data/weather-data";
-import {LocationData} from "../models/location-data/location-data";
-import {WeatherAction, WeatherActionTypes} from "../actions/weather.actions";
-import {LocationAction, LocationActionTypes} from "../actions/location.actions";
+import {WeatherData} from '../models/weather-data/weather-data';
+import {LocationData} from '../models/location-data/location-data';
+import {WeatherAction, WeatherActionTypes} from '../actions/weather.actions';
+import {LocationAction, LocationActionTypes} from '../actions/location.actions';
 
 export interface WeatherState {
   weatherData: WeatherData | null;
@@ -17,7 +17,7 @@ export interface WeatherState {
 
 const initialWeatherState: WeatherState = {
   weatherData: null
-}
+};
 
 export interface LocationState {
   location: LocationData | null;
@@ -27,7 +27,7 @@ export interface LocationState {
 const initialLocationState: LocationState = {
   location: null,
   error: null
-}
+};
 
 // state
 export interface AppState {
@@ -56,14 +56,14 @@ export function locationReducer(state: LocationState = initialLocationState, act
       return {
         location: action.payload.locationData,
         error: null
-      }
+      };
 
       break;
     case LocationActionTypes.LocationsError:
       return {
         location: null,
         error: action.payload.error
-      }
+      };
 
       break;
 

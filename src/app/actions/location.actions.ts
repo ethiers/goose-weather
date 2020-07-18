@@ -1,12 +1,12 @@
-import { Action } from '@ngrx/store'
-import { LocationData } from "../models/location-data/location-data";
+import { Action } from '@ngrx/store';
+import { LocationData } from '../models/location-data/location-data';
 
 export enum LocationActionTypes {
   LoadLocations = '[Home Page] Load Location',
-  LocationsError = '[Home Page] Load Location'
+  LocationsError = '[Home Page] Load Error'
 }
 
-export class LocationAction implements Action{
+export class LocationAction implements Action {
   type: string;
   payload: {
     locationData: LocationData,
@@ -14,8 +14,8 @@ export class LocationAction implements Action{
   };
 }
 
-export class LoadLocation implements Action{
-  readonly type = LocationActionTypes.LoadLocations
+export class LoadLocation implements Action {
+  readonly type = LocationActionTypes.LoadLocations;
 
   constructor(readonly payload: {locationData: LocationData}) {
   }
@@ -28,4 +28,4 @@ export class LocationsError implements Action {
   }
 }
 
-export type ActionUnion = LoadLocation | LocationsError
+export type ActionUnion = LoadLocation | LocationsError;

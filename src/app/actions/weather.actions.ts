@@ -1,5 +1,5 @@
 import { Action } from '@ngrx/store';
-import { WeatherData } from "../models/weather-data/weather-data";
+import { WeatherData } from '../models/weather-data/weather-data';
 
 export enum WeatherActionTypes {
   LoadWeather = '[Home Page] Load Weather'
@@ -13,7 +13,7 @@ export class WeatherAction implements Action {
 }
 
 export class LoadWeather implements Action {
-  readonly type = WeatherActionTypes.LoadWeather
+  readonly type = WeatherActionTypes.LoadWeather;
 
   constructor(readonly payload: {weatherData: WeatherData}) {
   }
