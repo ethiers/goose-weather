@@ -7,7 +7,9 @@
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",
-    "e2e": "ng e2e"
+    "e2e": "ng e2e",
+    "environment-variables": "python scripts/environment_variables.py $OPEN_WEATHER_MAP_API_KEY"
+
   },
   "private": true,
   "dependencies": {

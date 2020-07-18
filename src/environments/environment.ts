@@ -3,7 +3,9 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+  production: false,
+  openWeatherMapAPIKey: 'OPEN_WEATHER_MAP_API_KEY',
+  noaaMetaDataEndpoint: 'https://api.weather.gov/points/'
 };
 
 /*
