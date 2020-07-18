@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, Input, OnInit} from '@angular/core';
+import {WeatherData} from '../../models/weather-data/weather-data';
 
 @Component({
   selector: 'app-current-conditions',
@@ -7,7 +8,15 @@ import { Component, OnInit } from '@angular/core';
 })
 export class CurrentConditionsComponent implements OnInit {
 
-  constructor() { }
+  data: WeatherData;
+
+  @Input()
+  set weatherData(weatherData: WeatherData) {
+    this.data = weatherData || null;
+  }
+
+  constructor() {
+  }
 
   ngOnInit() {
   }
