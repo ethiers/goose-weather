@@ -24,6 +24,8 @@ import { WeatherDiscussionComponent } from './card/weather-discussion/weather-di
 import { WeeklyForecastComponent } from './card/weekly-forecast/weekly-forecast.component';
 import { AboutDesktopComponent } from './card/about-desktop/about-desktop.component';
 import { AboutMobileComponent } from './card/about-mobile/about-mobile.component';
+import { EffectsModule } from '@ngrx/effects';
+import { WeatherEffects } from './effect/weather.effects';
 
 @NgModule({
   declarations: [
@@ -37,7 +39,14 @@ import { AboutMobileComponent } from './card/about-mobile/about-mobile.component
     AboutDesktopComponent,
     AboutMobileComponent,
   ],
-  entryComponents: [],
+  entryComponents: [
+    CurrentConditionsComponent,
+    HourlyForecastComponent,
+    WeatherDiscussionComponent,
+    WeatherDiscussionComponent,
+    WeeklyForecastComponent,
+    AboutMobileComponent,
+  ],
   imports: [
     BrowserModule,
     AppRoutingModule,
@@ -59,6 +68,7 @@ import { AboutMobileComponent } from './card/about-mobile/about-mobile.component
     }),
     !environment.production ? StoreDevtoolsModule.instrument() : [],
     BrowserAnimationsModule,
+    EffectsModule.forRoot([WeatherEffects]),
     // hammerjs
   ],
   providers: [],
