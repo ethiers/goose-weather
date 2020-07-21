@@ -12,6 +12,11 @@ import {WeatherDiscussionComponent} from "../card/weather-discussion/weather-dis
 import {WeeklyForecastComponent} from "../card/weekly-forecast/weekly-forecast.component";
 import {AboutDesktopComponent} from "../card/about-desktop/about-desktop.component";
 import {AboutMobileComponent} from "../card/about-mobile/about-mobile.component";
+import {AppState, selectError} from "../reducers";
+import {select, Store} from "@ngrx/store";
+import {LoadLocations} from "../actions/location.actions";
+import {MatAutocompleteSelectedEvent} from "@angular/material/autocomplete";
+import {LoadWeather} from "../actions/weather.actions";
 
 @Component({
   selector: 'app-weather',
@@ -34,6 +39,8 @@ export class WeatherComponent implements OnInit {
   cities = [];
   selectedLocation = '';
 
+  error$: Observable<any>;
+
   cards = this.breakpointObserver.observe(Breakpoints.Handset).pipe(
     map( ({matches}) => {
       if(matches) {
@@ -44,7 +51,7 @@ export class WeatherComponent implements OnInit {
     })
   )
 
-  constructor(private breakpointObserver: BreakpointObserver) {
+  constructor(private breakpointObserver: BreakpointObserver, private store: Store<AppState>) {
 
     console.log(breakpointObserver)
 
@@ -115,13 +122,45 @@ export class WeatherComponent implements OnInit {
         component: AboutMobileComponent
       }
     ];
+  }
 
-    //
+  savePosition(position) {
+    this.locationData.latitude = position.coords.latitude.toFixed(4).toString();
+    this.locationData.longitude = position.coords.longitude.toFixed(4).toString();
+    for (const city of this.cities) {
+      if (city.combinedName === '(your location)') {
+        city.latitude = this.locationData.latitude;
+        city.longitude = this.locationData.longitude;
+      }
+    }
 
+    this.store.dispatch(new LoadLocations({locationData: this.locationData}));
+  }
 
+  onSelectionChanged(event: MatAutocompleteSelectedEvent) {
+    for (const city of this.cities) {
+      if (city.combinedName === event.option.value) {
+        const latitude = parseFloat(city.latitude);
+        const longitude = parseFloat(city.longitude);
+        this.locationData.latitude = latitude.toFixed(4).toString();
+        this.locationData.longitude = longitude.toFixed(4).toString();
+        this.store.dispatch(new LoadWeather({weatherData: null}));
+        this.store.dispatch(new LoadLocations({locationData: this.locationData}));
+        break;
+      }
+    }
   }
 
   ngOnInit() {
-  }
 
+    this.error$ = this.store.pipe(select(selectError));
+
+    try {
+      navigator.geolocation.getCurrentPosition((position) => {
+        this.savePosition(position);
+      });
+    } catch (error) {
+       alert('Browser does not support location services');
+    }
+  }
 }

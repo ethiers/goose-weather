@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 import {WeatherData} from '../models/weather-data/weather-data';
 import {HttpClient, HttpErrorResponse} from '@angular/common/http';
 import {LocationData} from '../models/location-data/location-data';
@@ -7,6 +7,7 @@ import {catchError, map, mergeMap} from 'rxjs/operators';
 import {environment} from '../../environments/environment';
 import {WeeklyForecast} from '../models/weekly-forecast/weekly-forecast';
 import {HourlyForecast} from '../models/hourly-forecast/hourly-forecast';
+import {logger} from "codelyzer/util/logger";
 
 @Injectable({
   providedIn: 'root'
@@ -15,49 +16,44 @@ export class WeatherService {
 
   weatherData: WeatherData = new WeatherData();
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {
+  }
 
   getWeather(locationData: LocationData): Observable<any> {
-    return this.getNoaaMetadata(locationData.latitude, locationData.longitude)
-      .pipe(
-        mergeMap( metadata => this.getNoaaWeeklyForecast(metadata.properties.forecast)
+    return this.getNoaaWeeklyForecast(locationData)
           .pipe(
-            mergeMap(weeklyForecast => this.getNoaaHourlyForecast(metadata.properties.forecastHourly)
-              .pipe(
-                mergeMap( hourlyForecast => this.getCurrentWeatherOpenWeatherMapAPI(locationData.latitude, locationData.longitude)
-                  .pipe(
-                    map((currentWeather) => {
-                      // metadata
-                      this.weatherData.currentConditions.latitude = locationData.latitude;
-                      this.weatherData.currentConditions.longitude = locationData.longitude;
-                      this.weatherData.currentConditions.city = metadata.properties.relativeLocation.properties.city;
-                      this.weatherData.currentConditions.state = metadata.properties.relativeLocation.properties.state;
-                      this.weatherData.NoaaWeeklyForecastUrl = metadata.properties.forecast;
-                      this.weatherData.NoaaHourlyForecastUrl = metadata.properties.forecastHourly;
+            mergeMap(weeklyForecast => {
+              console.log('weeklyForecast', weeklyForecast);
+              return this.getWeatherOnceCall(locationData)
+                    .pipe(
+                      map((currentWeather) => {
+                        // metadata
+                        this.weatherData.currentConditions.latitude = locationData.latitude;
+                        this.weatherData.currentConditions.longitude = locationData.longitude;
+                        this.weatherData.currentConditions.city = weeklyForecast.city.name;
+                        this.weatherData.currentConditions.state = weeklyForecast.city.country;
 
-                      // weekly forcast
-                      this.weatherData.weeklyForecast = this.createWeeklyForecastFromNoaaData(weeklyForecast.properties.periods);
+                        // weekly forcast
+                        this.weatherData.weeklyForecast = this.createWeeklyForecastFromNoaaData(weeklyForecast.list);
 
-                      // hourly forecast
-                      this.weatherData.hourlyForecast = this.createHourlyForecastFromNoaaData(hourlyForecast.properties.periods);
+                        // hourly forecast
+                        this.weatherData.hourlyForecast = this.createHourlyForecastFromNoaaData(currentWeather.hourly);
 
-                      // current conditions
-                      this.weatherData.currentConditions.temp = String(Math.ceil(currentWeather.main.temp));
-                      this.weatherData.currentConditions.description = currentWeather.weather[0].description;
-                      this.weatherData.currentConditions.sunrise = this.createDateFromMillseconds(currentWeather.sys.sunrise);
-                      this.weatherData.currentConditions.sunset = this.createDateFromMillseconds(currentWeather.sys.sunset);
-                      this.weatherData.currentConditions.icon = this.selectCurrentConditionsIcon(currentWeather.weather[0].icon);
-                      this.weatherData.currentConditions.windSpeed = currentWeather.wind.speed;
-                      this.weatherData.currentConditions.windDirection = this.getWindDirectionFromDegreeAngle(currentWeather.wind.deg);
+                        // current conditions
+                        this.weatherData.currentConditions.temp = String(Math.ceil(currentWeather.current.temp));
+                        this.weatherData.currentConditions.description = currentWeather.current.weather[0].description;
+                        this.weatherData.currentConditions.sunrise = this.createDateFromMillseconds(currentWeather.current.sunrise);
+                        this.weatherData.currentConditions.sunset = this.createDateFromMillseconds(currentWeather.current.sunset);
+                        this.weatherData.currentConditions.icon = this.selectCurrentConditionsIcon(currentWeather.current.weather[0].icon);
+                        this.weatherData.currentConditions.windSpeed = currentWeather.current.wind_speed;
+                        this.weatherData.currentConditions.windDirection = this.getWindDirectionFromDegreeAngle(currentWeather.current.wind_deg);
 
-                      // save time that the weather was retrieved
-                      this.weatherData.weatherDate = new Date();
+                        // save time that the weather was retrieved
+                        this.weatherData.weatherDate = new Date();
 
-                      return this.weatherData;
-                    }))
-                  ))
-              ))
-          ));
+                        return this.weatherData;
+                      }))
+            }));
   }
 
   getWeatherLocalStorage(): Observable<WeatherData> {
@@ -139,160 +135,111 @@ export class WeatherService {
     return dateFormatted;
   }
 
-  private getNoaaMetadata(lat: string, long: string): Observable<any> {
+  // private getNoaaMetadata(locationData: LocationData): Observable<any> {
+  //   const nooMetaDataEndpoint = environment.noaaMetaDataEndpoint;
+  //   const appid = environment.openWeatherMapAPIKey;
+  //   const metadataURL: string = nooMetaDataEndpoint.replace('{lat}', locationData.latitude).replace('{lon}', locationData.longitude).replace('{openWeatherMapAPIKey}', appid)
+  //
+  //   console.log(metadataURL);
+  //
+  //   return this.http.get(metadataURL)
+  //     .pipe(
+  //       catchError(this.handleError)
+  //     );
+  // }
+
+  // getNoaaHourlyForecast(lat: string, long: string): Observable<any> {
+  //
+  //   const APIKey = environment.openWeatherMapAPIKey;
+  //   // default units are kelvin https://openweathermap.org/current
+  //   // pass the unit imperial here to use Farenheit
+  //   const units = 'imperial';
+  //   const hourlyURL = 'https://api.openweathermap.org/data/2.5/onecall?lat=' + lat + '&lon=' + long
+  //     + '&exclude=current,minutely,daily' + '&units=' + units + '&appid=' + APIKey;
+  //
+  //   return this.http.get(hourlyURL)
+  //     .pipe(
+  //       catchError(this.handleError)
+  //     );
+  // }
+
+  // getNoaaHourlyForecast(locationData: LocationData): Observable<any> {
+  //   const nooMetaDataEndpoint = environment.noaaMetaDataEndpoint;
+  //   const APIKey = environment.openWeatherMapAPIKey;
+  //   // default units are kelvin https://openweathermap.org/current
+  //   // pass the unit imperial here to use Farenheit
+  //   const units = 'imperial';
+  //   const hourlyURL =  nooMetaDataEndpoint + '/onecall?lat=' + locationData.latitude + '&lon=' + locationData.longitude
+  //     + '&exclude=current,minutely,daily' + '&units=' + units + '&appid=' + APIKey;
+  //
+  //   return this.http.get(hourlyURL)
+  //     .pipe(
+  //       catchError(this.handleError)
+  //     );
+  // }
+
+  private getNoaaWeeklyForecast(locationData: LocationData): Observable<any> {
     const nooMetaDataEndpoint = environment.noaaMetaDataEndpoint;
-    const metadataURL: string = nooMetaDataEndpoint + lat + ',' + long;
-    return this.http.get(metadataURL)
-      .pipe(
-        catchError(this.handleError)
-      );
-  }
-
-  getNoaaHourlyForecast(hourlyURL): Observable<any> {
-    return this.http.get(hourlyURL)
-      .pipe(
-        catchError(this.handleError)
-      );
-  }
-
-  private getNoaaWeeklyForecast(forecastURL: string): Observable<any>  {
-    return this.http.get(forecastURL)
-      .pipe(
-        catchError(this.handleError)
-      );
-  }
-
-  private getCurrentWeatherOpenWeatherMapAPI(lat: string, long: string): Observable<any> {
     const APIKey = environment.openWeatherMapAPIKey;
     // default units are kelvin https://openweathermap.org/current
     // pass the unit imperial here to use Farenheit
     const units = 'imperial';
-    const openWeatherMapAPIURL = 'https://api.openweathermap.org/data/2.5/weather?lat=' + lat + '&lon=' + long
+    const weatherURL =  nooMetaDataEndpoint + '/forecast?lat=' + locationData.latitude + '&lon=' + locationData.longitude
       + '&units=' + units + '&appid=' + APIKey;
-    return this.http.get(openWeatherMapAPIURL)
+
+    return this.http.get(weatherURL)
       .pipe(
         catchError(this.handleError)
       );
   }
 
+  private getWeatherOnceCall(locationData: LocationData): Observable<any> {
+    const nooMetaDataEndpoint = environment.noaaMetaDataEndpoint;
+    const APIKey = environment.openWeatherMapAPIKey;
+    // default units are kelvin https://openweathermap.org/current
+    // pass the unit imperial here to use Farenheit
+    const units = 'imperial';
+    const weatherURL =  nooMetaDataEndpoint + '/onecall?lat=' + locationData.latitude + '&lon=' + locationData.longitude
+      + '&exclude=minutely,daily' + '&units=' + units + '&appid=' + APIKey;
+    return this.http.get(weatherURL)
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  // private getCurrentWeatherOpenWeatherMapAPI(lat: string, long: string): Observable<any> {
+  //   const nooMetaDataEndpoint = environment.noaaMetaDataEndpoint;
+  //   const APIKey = environment.openWeatherMapAPIKey;
+  //   // default units are kelvin https://openweathermap.org/current
+  //   // pass the unit imperial here to use Farenheit
+  //   const units = 'imperial';
+  //   const openWeatherMapAPIURL = nooMetaDataEndpoint + '/weather?lat=' + lat + '&lon=' + long
+  //     + '&units=' + units + '&appid=' + APIKey;
+  //   return this.http.get(openWeatherMapAPIURL)
+  //     .pipe(
+  //       catchError(this.handleError)
+  //     );
+  // }
+
   selectCurrentConditionsIcon(iconAPI: string) {
     // official Open Weather Map API Icon Defintitions https://openweathermap.org/weather-conditions
-    let conditionIcon = '';
 
-    switch (iconAPI) {
-      case '01d': {
-        // clear sky day
-        conditionIcon = './assets/sun.svg';
-        break;
-      }
-      case '01n': {
-        // clear sky night
-        conditionIcon = './assets/clear_sky_night.png';
-        break;
-      }
-      case '02d': {
-        // few clouds day
-        conditionIcon = './assets/clouds.svg';
-        break;
-      }
-      case '02n': {
-        // few clouds night
-        conditionIcon = './assets/few_clouds_night.png';
-        break;
-      }
-      case '03d': {
-        // scattered clouds
-        conditionIcon = './assets/clouds.svg';
-        break;
-      }
-      case '03n': {
-        // few clouds night
-        conditionIcon = './assets/few_clouds_night.png';
-        break;
-      }
-      case '04d': {
-        // broken clouds
-        conditionIcon = './assets/clouds.svg';
-        break;
-      }
-      case '04n': {
-        // few clouds night
-        conditionIcon = './assets/few_clouds_night.png';
-        break;
-      }
-      case '09d': {
-        // shower rain day
-        conditionIcon = './assets/shower_rain_day.png';
-        break;
-      }
-      case '09n': {
-        // shower rain night
-        conditionIcon = './assets/shower_rain_night.png';
-        break;
-      }
-      case '10d': {
-        // shower rain day
-        conditionIcon = './assets/shower_rain_day.png';
-        break;
-      }
-      case '10n': {
-        // shower rain night
-        conditionIcon = './assets/shower_rain_night.png';
-        break;
-      }
-      case '11d': {
-        // shower rain day
-        conditionIcon = './assets/shower_rain_day.png';
-        break;
-      }
-      case '11n': {
-        // shower rain night
-        conditionIcon = './assets/shower_rain_night.png';
-        break;
-      }
-      case '13d': {
-        // snow day
-        conditionIcon = './assets/snow.png';
-        break;
-      }
-      case '13n': {
-        // snow day
-        conditionIcon = './assets/snow.png';
-        break;
-      }
-      case '50d': {
-        // fog day
-        conditionIcon = './assets/fog_day.png';
-        break;
-      }
-      case '50n': {
-        // fog night
-        conditionIcon = './assets/fog_night.png';
-        break;
-      }
-      default: {
-        // nothing found so just show the sun image here
-        conditionIcon = './assets/sun.svg';
-        break;
-      }
-    }
-
-    return conditionIcon;
+    return '//openweathermap.org/img/wn/'  + iconAPI + '@2x.png';
   }
 
   createWeeklyForecastFromNoaaData(periods: any): WeeklyForecast[] {
-    const weeklyForecastTotal =  [];
+    const weeklyForecastTotal = [];
 
     for (const period of periods) {
       const weeklyForecast = new WeeklyForecast();
-      weeklyForecast.period = period.number;
-      weeklyForecast.name = period.name;
-      weeklyForecast.temp = period.temperature;
-      weeklyForecast.windSpeed = period.windSpeed;
-      weeklyForecast.windDirection = period.windDirection;
-      weeklyForecast.icon = period.icon;
-      weeklyForecast.shortForecast = period.shortForecast;
-      weeklyForecast.detailedForecast = period.detailedForecast;
+      weeklyForecast.period = period.pop;
+      weeklyForecast.name = period.dt_txt;
+      weeklyForecast.temp = period.main.temp;
+      weeklyForecast.windSpeed = period.wind.speed;
+      weeklyForecast.windDirection = period.wind.deg;
+      weeklyForecast.icon = '//openweathermap.org/img/w/' + period.weather[0].icon + '.png';
+      weeklyForecast.shortForecast = period.weather[0].main;
+      weeklyForecast.detailedForecast = period.weather[0].description;
       weeklyForecastTotal.push(weeklyForecast);
     }
 
@@ -300,7 +247,7 @@ export class WeatherService {
   }
 
   createHourlyForecastFromNoaaData(periods: any): HourlyForecast[] {
-    const hourlyForecastTotal =  [];
+    const hourlyForecastTotal = [];
     let counter = 0;
     for (const period of periods) {
       if (counter === 12) {

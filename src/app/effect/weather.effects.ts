@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import {Actions, Effect, ofType} from '@ngrx/effects';
-import {LoadLocation, LocationActionTypes, LocationsError} from '../actions/location.actions';
+import {LoadLocations, LocationActionTypes, LocationsError} from '../actions/location.actions';
 import {catchError, map, mergeMap} from 'rxjs/operators';
 import {LoadWeather} from '../actions/weather.actions';
 import {of} from 'rxjs';
@@ -16,7 +16,7 @@ export class WeatherEffects {
   @Effect()
   loadLocation$ = this.actions$
     .pipe(
-      ofType<LoadLocation>(LocationActionTypes.LoadLocations),
+      ofType<LoadLocations>(LocationActionTypes.LoadLocations),
       mergeMap((action) => this.weatherService.getWeather(action.payload.locationData)
         .pipe(
           map(weather => {

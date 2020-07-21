@@ -46,6 +46,7 @@ import { WeatherEffects } from './effect/weather.effects';
     WeatherDiscussionComponent,
     WeeklyForecastComponent,
     AboutMobileComponent,
+    AboutDesktopComponent,
   ],
   imports: [
     BrowserModule,

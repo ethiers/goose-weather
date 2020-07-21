@@ -1,4 +1,8 @@
 import { Component, OnInit } from '@angular/core';
+import {AppState, selectWeather} from "../../reducers";
+import {select, Store} from "@ngrx/store";
+import {WeatherData} from "../../models/weather-data/weather-data";
+import {Observable} from "rxjs";
 
 @Component({
   selector: 'app-weekly-forecast',
@@ -7,9 +11,11 @@ import { Component, OnInit } from '@angular/core';
 })
 export class WeeklyForecastComponent implements OnInit {
 
-  constructor() { }
+  data$: Observable<WeatherData>;
+
+  constructor(private store: Store<AppState>) { }
 
   ngOnInit() {
+    this.data$ = this.store.pipe(select(selectWeather));
   }
-
 }

@@ -14,7 +14,7 @@ export class LocationAction implements Action {
   };
 }
 
-export class LoadLocation implements Action {
+export class LoadLocations implements Action {
   readonly type = LocationActionTypes.LoadLocations;
 
   constructor(readonly payload: {locationData: LocationData}) {
@@ -28,4 +28,4 @@ export class LocationsError implements Action {
   }
 }
 
-export type ActionUnion = LoadLocation | LocationsError;
+export type ActionUnion = LoadLocations | LocationsError;
