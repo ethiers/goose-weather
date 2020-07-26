@@ -33,7 +33,7 @@ export class WeatherService {
                         this.weatherData.currentConditions.city = weeklyForecast.city.name;
                         this.weatherData.currentConditions.state = weeklyForecast.city.country;
 
-                        // weekly forcast
+                        // weekly forecast
                         this.weatherData.weeklyForecast = this.createWeeklyForecastFromNoaaData(weeklyForecast.list);
 
                         // hourly forecast
@@ -50,7 +50,7 @@ export class WeatherService {
 
                         // save time that the weather was retrieved
                         this.weatherData.weatherDate = new Date();
-
+                        console.log(this.weatherData);
                         return this.weatherData;
                       }))
             }));
@@ -135,49 +135,6 @@ export class WeatherService {
     return dateFormatted;
   }
 
-  // private getNoaaMetadata(locationData: LocationData): Observable<any> {
-  //   const nooMetaDataEndpoint = environment.noaaMetaDataEndpoint;
-  //   const appid = environment.openWeatherMapAPIKey;
-  //   const metadataURL: string = nooMetaDataEndpoint.replace('{lat}', locationData.latitude).replace('{lon}', locationData.longitude).replace('{openWeatherMapAPIKey}', appid)
-  //
-  //   console.log(metadataURL);
-  //
-  //   return this.http.get(metadataURL)
-  //     .pipe(
-  //       catchError(this.handleError)
-  //     );
-  // }
-
-  // getNoaaHourlyForecast(lat: string, long: string): Observable<any> {
-  //
-  //   const APIKey = environment.openWeatherMapAPIKey;
-  //   // default units are kelvin https://openweathermap.org/current
-  //   // pass the unit imperial here to use Farenheit
-  //   const units = 'imperial';
-  //   const hourlyURL = 'https://api.openweathermap.org/data/2.5/onecall?lat=' + lat + '&lon=' + long
-  //     + '&exclude=current,minutely,daily' + '&units=' + units + '&appid=' + APIKey;
-  //
-  //   return this.http.get(hourlyURL)
-  //     .pipe(
-  //       catchError(this.handleError)
-  //     );
-  // }
-
-  // getNoaaHourlyForecast(locationData: LocationData): Observable<any> {
-  //   const nooMetaDataEndpoint = environment.noaaMetaDataEndpoint;
-  //   const APIKey = environment.openWeatherMapAPIKey;
-  //   // default units are kelvin https://openweathermap.org/current
-  //   // pass the unit imperial here to use Farenheit
-  //   const units = 'imperial';
-  //   const hourlyURL =  nooMetaDataEndpoint + '/onecall?lat=' + locationData.latitude + '&lon=' + locationData.longitude
-  //     + '&exclude=current,minutely,daily' + '&units=' + units + '&appid=' + APIKey;
-  //
-  //   return this.http.get(hourlyURL)
-  //     .pipe(
-  //       catchError(this.handleError)
-  //     );
-  // }
-
   private getNoaaWeeklyForecast(locationData: LocationData): Observable<any> {
     const nooMetaDataEndpoint = environment.noaaMetaDataEndpoint;
     const APIKey = environment.openWeatherMapAPIKey;
@@ -207,20 +164,6 @@ export class WeatherService {
       );
   }
 
-  // private getCurrentWeatherOpenWeatherMapAPI(lat: string, long: string): Observable<any> {
-  //   const nooMetaDataEndpoint = environment.noaaMetaDataEndpoint;
-  //   const APIKey = environment.openWeatherMapAPIKey;
-  //   // default units are kelvin https://openweathermap.org/current
-  //   // pass the unit imperial here to use Farenheit
-  //   const units = 'imperial';
-  //   const openWeatherMapAPIURL = nooMetaDataEndpoint + '/weather?lat=' + lat + '&lon=' + long
-  //     + '&units=' + units + '&appid=' + APIKey;
-  //   return this.http.get(openWeatherMapAPIURL)
-  //     .pipe(
-  //       catchError(this.handleError)
-  //     );
-  // }
-
   selectCurrentConditionsIcon(iconAPI: string) {
     // official Open Weather Map API Icon Defintitions https://openweathermap.org/weather-conditions
 
@@ -248,6 +191,8 @@ export class WeatherService {
 
   createHourlyForecastFromNoaaData(periods: any): HourlyForecast[] {
     const hourlyForecastTotal = [];
+    const startTime = new Date().getTime();
+
     let counter = 0;
     for (const period of periods) {
       if (counter === 12) {
@@ -256,13 +201,12 @@ export class WeatherService {
       }
 
       const hourlyForecast = new HourlyForecast();
-      hourlyForecast.period = period.number;
-      hourlyForecast.temp = period.temperature;
-      hourlyForecast.windSpeed = period.windSpeed;
-      hourlyForecast.windDirection = period.windDirection;
-      hourlyForecast.icon = period.icon;
+      hourlyForecast.temp = period.temp;
+      hourlyForecast.windSpeed = period.wind_speed;
+      hourlyForecast.windDirection = period.wind_deg;
+      hourlyForecast.icon = '//openweathermap.org/img/w/' + period.weather[0].icon + '.png';
       // Time
-      const startDate: Date = new Date(period.startTime);
+      const startDate: Date = new Date(startTime + ((counter+1)*60*60*1000));
       const hoursNumber = startDate.getHours();
       let hoursDisplay = '';
       if (hoursNumber > 12) {

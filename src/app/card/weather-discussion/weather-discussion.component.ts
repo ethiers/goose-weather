@@ -1,4 +1,8 @@
 import { Component, OnInit } from '@angular/core';
+import {AppState, selectWeather} from "../../reducers";
+import {select, Store} from "@ngrx/store";
+import {WeatherData} from "../../models/weather-data/weather-data";
+import {Observable} from "rxjs";
 
 @Component({
   selector: 'app-weather-discussion',
@@ -6,10 +10,12 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./weather-discussion.component.css']
 })
 export class WeatherDiscussionComponent implements OnInit {
+  private data$: Observable<WeatherData>;
 
-  constructor() { }
+  constructor(private store: Store<AppState>) { }
 
   ngOnInit() {
+    this.data$ = this.store.pipe(select(selectWeather))
   }
 
 }

@@ -1,4 +1,8 @@
 import { Component, OnInit } from '@angular/core';
+import {select, Store} from "@ngrx/store";
+import {AppState, selectWeather} from "../../reducers";
+import {Observable} from "rxjs";
+import {WeatherData} from "../../models/weather-data/weather-data";
 
 @Component({
   selector: 'app-hourly-forecast',
@@ -7,9 +11,14 @@ import { Component, OnInit } from '@angular/core';
 })
 export class HourlyForecastComponent implements OnInit {
 
-  constructor() { }
+  displayedColumns: string[] = ['Time', 'Temp', 'Wind', 'Condition'];
+
+  private data$: Observable<WeatherData>;
+
+  constructor(private store: Store<AppState>) { }
 
   ngOnInit() {
+    this.data$ = this.store.pipe(select(selectWeather));
   }
 
 }
